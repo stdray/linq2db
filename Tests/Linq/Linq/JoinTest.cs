@@ -540,6 +540,35 @@ namespace Tests.Linq
 						));
 		}
 
+
+		[Test, DataContextSource]
+		public void GroupJoin10(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in Parent
+						join ch in Child on p.ParentID equals ch.ParentID into ch1
+					select new
+					{
+						p,
+						chCount = ch1.Count(),
+						chSum   = ch1.Sum(x => x.ChildID)
+					} into p
+					where p.chCount > 0
+					select p
+					,
+					from p in db.Parent
+						join ch in db.Child on p.ParentID equals ch.ParentID into ch1
+					select new
+					{
+						p,
+						chCount = ch1.Count(),
+						chSum   = ch1.Sum(x => x.ChildID)
+					} into p
+					where p.chCount > 0
+					select p);
+		}
+
 		[Test, DataContextSource]
 		public void LeftJoin1(string context)
 		{
