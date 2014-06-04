@@ -540,7 +540,6 @@ namespace Tests.Linq
 						));
 		}
 
-
 		[Test, DataContextSource]
 		public void GroupJoin10(string context)
 		{
@@ -554,7 +553,7 @@ namespace Tests.Linq
 						chCount = ch1.Count(),
 						chSum   = ch1.Sum(x => x.ChildID)
 					} into p
-					where p.chCount > 0
+					where p.chSum > 0
 					select p
 					,
 					from p in db.Parent
@@ -565,7 +564,7 @@ namespace Tests.Linq
 						chCount = ch1.Count(),
 						chSum   = ch1.Sum(x => x.ChildID)
 					} into p
-					where p.chCount > 0
+					where p.chSum > 0
 					select p);
 		}
 
