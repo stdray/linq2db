@@ -23,29 +23,33 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			if (sequence.SelectQuery != buildInfo.SelectQuery)
+			if (sequence.SelectQuery != buildInfo.SelectQuery &&
+				sequence is SelectContext &&
+				((SelectContext)sequence).Sequence.Length == 1)
 			{
-				if (sequence is JoinBuilder.GroupJoinSubQueryContext)
+				var sq = ((SelectContext)sequence).Sequence[0];
+
+				if (sq is JoinBuilder.GroupJoinSubQueryContext)
 				{
-					var ctx = new AggregationContext(buildInfo.Parent, sequence, methodCall)
-					{
-						SelectQuery = ((JoinBuilder.GroupJoinSubQueryContext)sequence).GetCounter(methodCall)
-					};
-
-					ctx.Sql        = ctx.SelectQuery;
-					ctx.FieldIndex = ctx.SelectQuery.Select.Add(new SqlFunction(methodCall.Type, methodCall.Method.Name, ctx.SelectQuery), "agg");
-
-					return ctx;
+//					var ctx = new AggregationContext(buildInfo.Parent, sq, methodCall)
+//					{
+//						SelectQuery = ((JoinBuilder.GroupJoinSubQueryContext)sq).GetCounter(methodCall)
+//					};
+//
+//					ctx.Sql        = ctx.SelectQuery;
+//					ctx.FieldIndex = ctx.SelectQuery.Select.Add(new SqlFunction(methodCall.Type, methodCall.Method.Name, ctx.SelectQuery), "agg");
+//
+//					return ctx;
 				}
 
-				if (sequence is GroupByBuilder.GroupByContext)
-				{
-					return new AggregationContext(buildInfo.Parent, sequence, methodCall)
-					{
-						Sql        = new SqlFunction(methodCall.Type, methodCall.Method.Name, sequence.SelectQuery),
-						FieldIndex = -1
-					};
-				}
+//				if (sq is GroupByBuilder.GroupByContext)
+//				{
+//					return new AggregationContext(buildInfo.Parent, sq, methodCall)
+//					{
+//						Sql        = new SqlFunction(methodCall.Type, methodCall.Method.Name, sq.SelectQuery),
+//						FieldIndex = -1
+//					};
+//				}
 			}
 
 			if (sequence.SelectQuery.Select.IsDistinct        ||
