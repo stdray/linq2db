@@ -592,7 +592,7 @@ namespace LinqToDB.SqlQuery
 								if (q.From.Tables.Count == 0)
 									break;
 
-								goto default;
+								goto case QueryType.Select;
 
 							case QueryType.Update :
 								Visit2(q.Update);
@@ -616,9 +616,12 @@ namespace LinqToDB.SqlQuery
 								Visit2(q.CreateTable);
 								break;
 
-							default :
+							case QueryType.Select :
 								Visit2(q.Select);
 								break;
+
+							default :
+								throw new InvalidOperationException();
 						}
 
 						// Visit2(q.From);

@@ -1954,7 +1954,7 @@ namespace LinqToDB.SqlQuery
 
 					case QueryElementType.SqlQuery :
 						{
-							if (col.Expression == SelectQuery)
+							if (col.Expression == SelectQuery || new QueryVisitor().Find(col, e => e == SelectQuery) != null)
 								throw new InvalidOperationException("Wrong query usage.");
 							break;
 						}

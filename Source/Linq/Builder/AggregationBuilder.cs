@@ -31,25 +31,25 @@ namespace LinqToDB.Linq.Builder
 
 				if (sq is JoinBuilder.GroupJoinSubQueryContext)
 				{
-//					var ctx = new AggregationContext(buildInfo.Parent, sq, methodCall)
-//					{
-//						SelectQuery = ((JoinBuilder.GroupJoinSubQueryContext)sq).GetCounter(methodCall)
-//					};
-//
-//					ctx.Sql        = ctx.SelectQuery;
-//					ctx.FieldIndex = ctx.SelectQuery.Select.Add(new SqlFunction(methodCall.Type, methodCall.Method.Name, ctx.SelectQuery), "agg");
-//
-//					return ctx;
+					var ctx = new AggregationContext(buildInfo.Parent, sq, methodCall)
+					{
+						SelectQuery = ((JoinBuilder.GroupJoinSubQueryContext)sq).GetCounter(methodCall)
+					};
+
+					ctx.Sql        = ctx.SelectQuery;
+					ctx.FieldIndex = ctx.SelectQuery.Select.Add(new SqlFunction(methodCall.Type, methodCall.Method.Name, ctx.SelectQuery), "agg");
+
+					return ctx;
 				}
 
-//				if (sq is GroupByBuilder.GroupByContext)
-//				{
-//					return new AggregationContext(buildInfo.Parent, sq, methodCall)
-//					{
-//						Sql        = new SqlFunction(methodCall.Type, methodCall.Method.Name, sq.SelectQuery),
-//						FieldIndex = -1
-//					};
-//				}
+				if (sq is GroupByBuilder.GroupByContext)
+				{
+					return new AggregationContext(buildInfo.Parent, sq, methodCall)
+					{
+						Sql        = new SqlFunction(methodCall.Type, methodCall.Method.Name, sq.SelectQuery),
+						FieldIndex = -1
+					};
+				}
 			}
 
 			if (sequence.SelectQuery.Select.IsDistinct        ||

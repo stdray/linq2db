@@ -567,10 +567,11 @@ namespace Tests.Linq
 					select new
 					{
 						p,
-						chCount = ch1.Count(),
+//						chCount = ch1.Count(),
 						chSum   = ch1.Sum(x => x.ChildID)
 					} into p
 					where p.chSum > 0
+//					where p.chCount > 0
 					select p
 					,
 					from p in db.Parent
@@ -578,10 +579,11 @@ namespace Tests.Linq
 					select new
 					{
 						p,
-						chCount = ch1.Count(),
+//						chCount = ch1.Count(),
 						chSum   = ch1.Sum(x => x.ChildID)
 					} into p
 					where p.chSum > 0
+//					where p.chCount > 0
 					select p);
 		}
 
