@@ -9,6 +9,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Xml;
 using System.Xml.Linq;
+using LinqToDB.Common;
 
 namespace LinqToDB.DataProvider
 {
