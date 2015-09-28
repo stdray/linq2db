@@ -137,51 +137,73 @@ namespace LinqToDB.DataProvider.Oracle
 				.ToList();
 		}
 
-		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
-		{
-			var ps = ((DbConnection)dataConnection.Connection).GetSchema("Procedures");
+        protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
+        {
+            return dataConnection.Query(
+                p =>
+                {
+                    var package = p["OBJECT_NAME"].ToString();
+                    var name    = p["PROCEDURE_NAME"].ToString();
+                    var type    = p["OBJECT_TYPE"].ToString();
+                    return new ProcedureInfo
+                    {
+                        ProcedureID     = ProcedureID(p["OBJECT_ID"], p["SUBPROGRAM_ID"], p["OVERLOAD"]),
+                        SchemaName      = _currentUser,
+                        ProcedureName   = type == "PACKAGE" ? package + "." + name : package,
+                        IsFunction      = type == "FUNCTION",
+                        IsDefaultSchema = true,
+                    };
+                }, @"SELECT 
+                        OBJECT_ID,
+                        SUBPROGRAM_ID,
+                        OVERLOAD,
+                        OBJECT_NAME,
+                        PROCEDURE_NAME,
+                        OBJECT_TYPE
+                     FROM 
+                        USER_PROCEDURES
+                     WHERE 
+                        OBJECT_TYPE = 'PACKAGE' and PROCEDURE_NAME IS NOT NULL
+                     OR OBJECT_TYPE in ('FUNCTION', 'PROCEDURE')")
+                .ToList();
+        }
 
-			return
-			(
-				from p in ps.AsEnumerable()
-				let schema  = p.Field<string>("OWNER")
-				let name    = p.Field<string>("OBJECT_NAME")
-				where IncludedSchemas.Length != 0 || ExcludedSchemas.Length != 0 || schema == _currentUser
-				select new ProcedureInfo
-				{
-					ProcedureID     = schema + "." + name,
-					SchemaName      = schema,
-					ProcedureName   = name,
-					IsDefaultSchema = schema == _currentUser,
-				}
-			).ToList();
-		}
-
-		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
-		{
-			var pps = ((DbConnection)dataConnection.Connection).GetSchema("ProcedureParameters");
-
-			return
-			(
-				from pp in pps.AsEnumerable()
-				let schema    = pp.Field<string>("OWNER")
-				let name      = pp.Field<string>("OBJECT_NAME")
-				let direction = pp.Field<string>("IN_OUT")
-				where IncludedSchemas.Length != 0 || ExcludedSchemas.Length != 0 || schema == _currentUser
-				select new ProcedureParameterInfo
-				{
-					ProcedureID   = schema + "." + name,
-					ParameterName = pp.Field<string>("ARGUMENT_NAME"),
-					DataType      = pp.Field<string>("DATA_TYPE"),
-					Ordinal       = Converter.ChangeTypeTo<int>  (pp["POSITION"]),
-					Length        = Converter.ChangeTypeTo<long?>(pp["DATA_LENGTH"]),
-					Precision     = Converter.ChangeTypeTo<int?> (pp["DATA_PRECISION"]),
-					Scale         = Converter.ChangeTypeTo<int?> (pp["DATA_SCALE"]),
-					IsIn          = direction.StartsWith("IN"),
-					IsOut         = direction.EndsWith("OUT"),
-				}
-			).ToList();
-		}
+        protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
+        {
+            return dataConnection.Query(
+                pp =>
+                {
+                    var direction = pp["IN_OUT"].ToString();
+                    return new ProcedureParameterInfo
+                    {
+                        ProcedureID   = ProcedureID(pp["OBJECT_ID"], pp["SUBPROGRAM_ID"], pp["OVERLOAD"]),
+                        ParameterName = pp["ARGUMENT_NAME"].ToString(),
+                        DataType      = pp["DATA_TYPE"].ToString(),
+                        Ordinal       = Converter.ChangeTypeTo<int>(pp["POSITION"]),
+                        Length        = Converter.ChangeTypeTo<long?>(pp["DATA_LENGTH"]),
+                        Precision     = Converter.ChangeTypeTo<int?>(pp["DATA_PRECISION"]),
+                        Scale         = Converter.ChangeTypeTo<int?>(pp["DATA_SCALE"]),
+                        IsIn          = direction.StartsWith("IN"),
+                        IsOut         = direction.EndsWith("OUT"),
+                    };
+                }, @"SELECT
+                        OBJECT_ID,
+                        SUBPROGRAM_ID,
+                        OVERLOAD,
+                        IN_OUT,
+                        ARGUMENT_NAME,
+                        DATA_TYPE,
+                        POSITION, 
+                        DATA_LENGTH, 
+                        DATA_PRECISION, 
+                        DATA_SCALE, 
+                        TYPE_OWNER, 
+                        TYPE_NAME, 
+                        TYPE_SUBNAME
+                    FROM 
+                        USER_ARGUMENTS")
+                .ToList();
+        }
 
 		protected override string GetDbType(string columnType, DataTypeInfo dataType, long? length, int? prec, int? scale)
 		{
@@ -245,5 +267,13 @@ namespace LinqToDB.DataProvider.Oracle
 
 			return DataType.Undefined;
 		}
+
+        static string ProcedureID(object objectId, object subProgramId, object overload)
+        {
+            var overloadStr = overload.ToString();
+            return string.IsNullOrEmpty(overloadStr)
+                ? objectId + "/" + subProgramId
+                : objectId + "/" + subProgramId + overloadStr;
+        }
 	}
 }
